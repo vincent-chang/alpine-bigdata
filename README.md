@@ -2,10 +2,10 @@
 
 此项目是以 https://github.com/big-data-europe 作为基础所做的 Alpine Linux arm64 平台定制开发。
 
-##项目目标
+## 项目目标
 建立一套可以运行在 Apple Silicon M1 机器上的大数据 Docker 镜像。
 
-##模块说明：
+## 模块说明：
 * hadoop-base: 基础的 hadoop 环境，由于原版 yarn 中的 leveldbjni-all-1.8 并不能用在 Alpine Linux 上，所以我把它在 Alpine 上重新编译打包了。
 * name-node: 顾名思义
 * data-node: 顾名思义
