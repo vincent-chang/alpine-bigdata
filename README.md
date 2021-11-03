@@ -11,6 +11,7 @@
 * data-node: 顾名思义
 * resource-manager: 顾名思义
 * node-manager: 顾名思义
+* node-manager-spark-shuffle: 在 yarn 中配置了 spark-shuffle 的 node-manager
 * hadoop-history-server: 顾名思义
 * hive: hive server 服务
 * hive-metastore-mysql: hive metastore 服务和 mariadb 数据库 
