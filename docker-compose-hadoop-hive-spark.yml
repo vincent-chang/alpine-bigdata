@@ -1,0 +1,215 @@
+version: '3'
+
+services:
+  name-node:
+    image: vincentzczhang/name-node:hadoop-2.5.2
+    volumes:
+      - namenode:/var/hadoop/dfs/name
+    env_file:
+      - ./hadoop.env
+    environment:
+      CLUSTER_NAME: "bigdata"
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+        - node.hostname == akswnc4.aksw.uni-leipzig.de
+      labels:
+        traefik.docker.network: bigdata
+        traefik.port: 50070
+    networks:
+      - bigdata
+
+  data-node:
+    image: vincentzczhang/data-node:hadoop-2.5.2
+    volumes:
+      - datanode:/var/hadoop/dfs/data
+    env_file:
+      - ./hadoop.env
+    environment:
+      SERVICE_PRECONDITION: "name-node:50070"
+    deploy:
+      mode: global
+      restart_policy:
+        condition: on-failure
+      labels:
+        traefik.docker.network: bigdata
+        traefik.port: 50075
+    depends_on:
+      - name-node
+    networks:
+      - bigdata
+
+  resource-manager:
+    image: vincentzczhang/resource-manager:hadoop-2.5.2
+    env_file:
+      - ./hadoop.env
+    environment:
+      SERVICE_PRECONDITION: "name-node:50070 data-node:50075"
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+        - node.hostname == akswnc4.aksw.uni-leipzig.de
+      labels:
+        traefik.docker.network: bigdata
+        traefik.port: 8088
+    healthcheck:
+      disable: true
+    depends_on:
+      - name-node
+      - data-node
+    networks:
+      - bigdata
+
+  node-manager:
+    image: vincentzczhang/node-manager-spark-shuffle:hadoop-2.5.2-hive-1.2.1-spark-1.6.1
+    env_file:
+      - ./hadoop.env
+      - ./hadoop.spark-shuffle.env
+    environment:
+      SERVICE_PRECONDITION: "name-node:50070 data-node:50075 resource-manager:8088"
+    deploy:
+      mode: global
+      restart_policy:
+        condition: on-failure
+      labels:
+        traefik.docker.network: bigdata
+        traefik.port: 8042
+    depends_on:
+      - name-node
+      - data-node
+      - resource-manager
+    networks:
+      - bigdata
+
+  hadoop-history-server:
+    image: vincentzczhang/hadoop-history-server:hadoop-2.5.2
+    volumes:
+      - hadoop-history-server:/var/hadoop/yarn/timeline
+    env_file:
+      - ./hadoop.env
+    environment:
+      SERVICE_PRECONDITION: "name-node:50070 data-node:50075 resource-manager:8088"
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+        - node.hostname == akswnc4.aksw.uni-leipzig.de
+      labels:
+        traefik.docker.network: bigdata
+        traefik.port: 8188
+    depends_on:
+      - name-node
+      - data-node
+      - resource-manager
+    networks:
+      - bigdata
+
+  hive-metastore-mysql:
+    image: vincentzczhang/hive-metastore-mysql
+    volumes:
+      - hive-metastore-mysql-data:/var/mysql
+    networks:
+      - bigdata
+    ports:
+      - 3306:3306
+
+  hive-metastore:
+    image: vincentzczhang/hive:1.2.1-mysql
+    env_file:
+      - ./hadoop.env
+    command: /opt/hive/bin/hive --service metastore
+    environment:
+      SERVICE_PRECONDITION: "name-node:50070 data-node:50075 hive-metastore-mysql:3306"
+    depends_on:
+      - hive-metastore-mysql
+    networks:
+      - bigdata
+    ports:
+      - "9083:9083"
+
+  hive-server:
+    image: vincentzczhang/hive:1.2.1-mysql
+    env_file:
+      - ./hadoop.env
+    environment:
+      HIVE_CORE_CONF_javax_jdo_option_ConnectionURL: "jdbc:mariadb://hive-metastore-mysql/hive"
+      SERVICE_PRECONDITION: "hive-metastore:9083"
+    depends_on:
+      - hive-metastore-mysql
+      - hive-metastore
+    networks:
+      - bigdata
+    ports:
+      - "10000:10000"
+
+  spark-master:
+    image: vincentzczhang/spark-master:hadoop-2.5.2-hive-1.2.1-spark-1.6.1
+    volumes:
+    - spark-logs:/var/spark/logs
+    env_file:
+      - ./hadoop.env
+    environment:
+      SERVICE_PRECONDITION: "name-node:50070 data-node:50075 resource-manager:8088"
+      INIT_DAEMON_STEP: "setup_spark"
+    depends_on:
+      - name-node
+      - data-node
+      - resource-manager
+      - node-manager
+    networks:
+      - bigdata
+    ports:
+      - "8080:8080"
+      - "7077:7077"
+      - "6066:6066"
+
+  spark-worker:
+    image: vincentzczhang/spark-worker:hadoop-2.5.2-hive-1.2.1-spark-1.6.1
+    volumes:
+    - spark-logs:/var/spark/logs
+    env_file:
+      - ./hadoop.env
+    environment:
+      SERVICE_PRECONDITION: "spark-master:7077"
+      SPARK_MASTER: "spark://spark-master:7077"
+    depends_on:
+      - spark-master
+    networks:
+      - bigdata
+    ports:
+      - "8081:8081"
+
+  spark-history-server:
+    image: vincentzczhang/spark-history-server:hadoop-2.5.2-hive-1.2.1-spark-1.6.1
+    volumes:
+    - spark-logs:/var/spark/logs
+    env_file:
+      - ./hadoop.env
+    environment:
+      SERVICE_PRECONDITION: "spark-master:7077"
+      SPARK_MASTER: "spark://spark-master:7077"
+    depends_on:
+      - spark-master
+    networks:
+      - bigdata
+    ports:
+      - "18081:18081"
+
+volumes:
+  namenode:
+  datanode:
+  hadoop-history-server:
+  hive-metastore-mysql-data:
+  spark-logs:
+
+networks:
+  bigdata:
