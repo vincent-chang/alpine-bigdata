@@ -7,6 +7,9 @@
 
 ![image](https://github.com/vincent-chang/alpine-bigdata/blob/main/.image/alpine-bigdata-docker.png?raw=true)
 
+## Docker Hub
+https://hub.docker.com/u/vincentzczhang
+
 ## 模块说明：
 * hadoop-base: 基础的 hadoop 环境，由于原版 yarn 中的 leveldbjni-all-1.8 并不能用在 Alpine Linux 上，所以我把它在 Alpine 上重新编译打包了。
 * name-node: 顾名思义
@@ -17,8 +20,8 @@
 * hadoop-history-server: 顾名思义
 * hive: hive server 服务
 * hive-metastore-mysql: hive metastore 服务和 mariadb 数据库 
-* spark-build: spark 的编译打包环境。为了能让编译的时候可以 mount 到 host 上的 maven repository，把 build 动作写在了 CMD 里，所以 spark-base 就不能继承这个镜像，要另外包含一份编译后的结果了。
-* spark-base: spark 的基础运行环境。包含一份由 spark-build 编译出来的 spark。
+* spark-build: spark 的编译打包测试环境，不再 docker-compose 中启动的。
+* spark-base: spark 的基础运行环境。
 * spark-master: 顾名思义
 * spark-worker: 顾名思义
 * spark-history-server: 顾名思义
