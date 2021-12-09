@@ -1,0 +1,1 @@
+docker buildx build --platform linux/amd64,linux/arm64 -t vincentzczhang/resource-manager:hadoop-2.5.2 --network host --push .
