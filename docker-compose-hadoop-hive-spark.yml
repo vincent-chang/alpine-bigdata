@@ -213,3 +213,5 @@ volumes:
 
 networks:
   bigdata:
+    external:
+      name: bigdata

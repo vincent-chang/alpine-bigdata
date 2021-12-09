@@ -45,22 +45,9 @@ ENV HADOOP_YARN_LIB_DIR=${HADOOP_HOME}/share/hadoop/yarn/lib
 ENV HIVE_METASTORE_JDBC_DRIVER=${HIVE_HOME}/lib/mariadb-java-client-2.7.3.jar
 ENV SPARK_CLASSPATH=${HIVE_METASTORE_JDBC_DRIVER}
 
-RUN /root/build-spark.sh \
-    && rm -rf ${SPARK_HOME} \
-    && tar -xvf /opt/spark-${SPARK_VERSION}-bin-${HADOOP_VERSION}.tgz -C /opt/ \
-    && rm /opt/spark-${SPARK_VERSION}-bin-${HADOOP_VERSION}.tgz \
-    && mv /opt/spark-${SPARK_VERSION}-bin-${HADOOP_VERSION} ${SPARK_HOME} \
-    && rm -rf /root/.m2 \
-    && rm -rf ${MAVEN_HOME} \
-    && rm /root/build-spark.sh \
-    && cd ${SPARK_HOME}/conf \
-    && ln -s ${HIVE_HOME}/conf/hive-site.xml hive-site.xml \
-    && rm -f ${HADOOP_YARN_LIB_DIR}/datanucleus-*.jar \
-    && cp ${HIVE_HOME}/lib/datanucleus-*.jar ${HADOOP_YARN_LIB_DIR}/ \
-    && cp ${HIVE_METASTORE_JDBC_DRIVER} ${HADOOP_YARN_LIB_DIR}/ \
-    && cp ${SPARK_HOME}/lib/spark-${SPARK_VERSION}-yarn-shuffle.jar ${HADOOP_YARN_LIB_DIR}/ \
-    && rm -f /opt/spark-${SPARK_VERSION}/lib/datanucleus-*.jar \
-    && cp ${HIVE_HOME}/lib/datanucleus-*.jar /opt/spark-${SPARK_VERSION}/lib/
+RUN /root/build-spark.sh
 
 # Note: this is needed when you use Python 3.3 or greater
 ENV PYTHONHASHSEED 1
+
+CMD ["bash"]
