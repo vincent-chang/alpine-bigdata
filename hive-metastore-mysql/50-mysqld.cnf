@@ -1,0 +1,2 @@
+[mysqld]
+sql_mode=NO_BACKSLASH_ESCAPES

@@ -814,13 +814,6 @@ CREATE TABLE IF NOT EXISTS `NOTIFICATION_SEQUENCE`
     PRIMARY KEY (`NNI_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
-
-
--- ----------------------------
--- Transaction and Lock Tables
--- ----------------------------
-SOURCE hive-txn-schema-0.13.0.mysql.sql;
-
 -- -----------------------------------------------------------------
 -- Record schema version. Should be the last step in the init script
 -- -----------------------------------------------------------------
