@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f docker-compose-hadoop-hive-spark.yml
+    kompose.version: 1.26.0 (40646f47)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: hive-metastore-mysql
+  name: hive-metastore-mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: hive-metastore-mysql
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -f docker-compose-hadoop-hive-spark.yml
+        kompose.version: 1.26.0 (40646f47)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/bigdata: "true"
+        io.kompose.service: hive-metastore-mysql
+    spec:
+      containers:
+        - image: vincentzczhang/hive-metastore-mysql
+          name: hive-metastore-mysql
+          ports:
+            - containerPort: 3306
+          resources: {}
+          volumeMounts:
+            - mountPath: /var/mysql
+              name: hive-metastore-mysql-data
+      restartPolicy: Always
+      volumes:
+        - name: hive-metastore-mysql-data
+          persistentVolumeClaim:
+            claimName: hive-metastore-mysql-data
+status: {}

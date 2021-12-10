@@ -3,15 +3,14 @@ FROM vincentzczhang/hadoop-base:hadoop-2.5.2
 LABEL maintainer="Vincent<vincent.zc.zhang@gmail.com>"
 
 ENV HADOOP_VERSION=2.5.2
-# Allow buildtime config of HIVE_VERSION
 ARG HIVE_VERSION
-# Set HIVE_VERSION from arg if provided at build, env if provided at run, or default
-# https://docs.docker.com/engine/reference/builder/#using-arg-variables
-# https://docs.docker.com/engine/reference/builder/#environment-replacement
 ENV HIVE_VERSION=${HIVE_VERSION:-1.2.1}
 
 ENV HIVE_HOME=/opt/hive
 ENV PATH=$HIVE_HOME/bin:$PATH
+
+ENV HADOOP_YARN_LIB_DIR=${HADOOP_HOME}/share/hadoop/yarn/lib
+ENV HIVE_METASTORE_JDBC_DRIVER=${HIVE_HOME}/lib/mariadb-java-client-2.7.3.jar
 
 COPY startup.sh /root/
 COPY entry_point.sh /root/
@@ -27,6 +26,9 @@ RUN apk add --no-progress --no-cache procps && \
 	rm apache-hive-$HIVE_VERSION-bin.tar.gz && \
 	rm /opt/hadoop-${HADOOP_VERSION}/share/hadoop/yarn/lib/jline-*.jar && \
 	cp /opt/hive/lib/jline-*.jar /opt/hadoop-${HADOOP_VERSION}/share/hadoop/yarn/lib/ && \
+	rm -f ${HADOOP_YARN_LIB_DIR}/datanucleus-*.jar && \
+    cp ${HIVE_HOME}/lib/datanucleus-*.jar ${HADOOP_YARN_LIB_DIR}/ && \
+    cp ${HIVE_METASTORE_JDBC_DRIVER} ${HADOOP_YARN_LIB_DIR}/ && \
 	chmod +x /root/startup.sh && \
 	chmod +x /root/entry_point.sh
 
