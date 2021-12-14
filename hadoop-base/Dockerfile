@@ -5,7 +5,7 @@ LABEL maintainer="Vincent<vincent.zc.zhang@gmail.com>"
 ENV HADOOP_VERSION 2.5.2
 ENV HADOOP_URL https://archive.apache.org/dist/hadoop/core/hadoop-${HADOOP_VERSION}/hadoop-${HADOOP_VERSION}.tar.gz
 
-RUN apk add --no-progress --no-cache libc6-compat perl \
+RUN apk add --no-progress --no-cache libc6-compat perl zlib snappy lz4 bzip2 \
     && set -x \
     && curl -fSL "${HADOOP_URL}" -o /tmp/hadoop.tar.gz \
     && tar -xvf /tmp/hadoop.tar.gz -C /opt/ \

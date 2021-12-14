@@ -1,4 +1,4 @@
-FROM mariadb:latest
+FROM alpine:3.14
 
 LABEL maintainer="Vincent<vincent.zc.zhang@gmail.com>"
 
@@ -7,10 +7,13 @@ ENV MYSQL_DATABASE=hive
 ENV MYSQL_USER=hive
 ENV MYSQL_PASSWORD=hive
 
-ADD 50-mysqld.cnf /etc/mysql/conf.d/
-ADD hive-schema.mysql.sql /tmp/
-ADD hive-txn-schema.mysql.sql /tmp/
-ADD init_hive_db.sh /docker-entrypoint-initdb.d/
-RUN chmod a+x /docker-entrypoint-initdb.d/init_hive_db.sh
+RUN apk add --no-progress --no-cache bash mysql mysql-client
+COPY my.cnf /etc/my.cnf
+COPY hive-schema.mysql.sql /tmp/
+COPY hive-txn-schema.mysql.sql /tmp/
+COPY docker-entrypoint.sh /root/
+RUN chmod a+x /root/docker-entrypoint.sh
 
 EXPOSE 3306
+
+ENTRYPOINT ["/root/docker-entrypoint.sh"]
